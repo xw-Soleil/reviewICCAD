@@ -11,3 +11,5 @@ sudo apt install gum -y
 在ubuntu上安装gum，然后即可使用脚本，交互如下
 ![初始界面](assets/image.png)
 ![交互界面](assets/image2.png)
+
+

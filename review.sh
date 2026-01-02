@@ -30,15 +30,39 @@ shopt -s histappend 2>/dev/null || true
 set -o history 2>/dev/null || true
 
 # ---------- 颜色和样式（降级友好）----------
+# 主题选择：通过环境变量 DRILL_THEME 设置
+# 可选值：default, ubuntu（适配 Ubuntu 红色背景）
+DRILL_THEME="${DRILL_THEME:-ubuntu}"
+
 if [[ -t 1 ]] && command -v tput >/dev/null 2>&1 && tput colors >/dev/null 2>&1; then
   BOLD=$(tput bold 2>/dev/null || echo '')
   RESET=$(tput sgr0 2>/dev/null || echo '')
-  GREEN=$(tput setaf 2 2>/dev/null || echo '')
-  YELLOW=$(tput setaf 3 2>/dev/null || echo '')
-  RED=$(tput setaf 1 2>/dev/null || echo '')
-  BLUE=$(tput setaf 4 2>/dev/null || echo '')
+
+  # 根据主题设置颜色
+  case "$DRILL_THEME" in
+    ubuntu)
+      # Ubuntu 红色背景主题：使用高对比度、明亮的颜色
+      GREEN=$(tput setaf 10 2>/dev/null || tput setaf 2)    # 亮绿色
+      YELLOW=$(tput setaf 11 2>/dev/null || tput setaf 3)   # 亮黄色
+      RED=$(tput setaf 9 2>/dev/null || tput setaf 1)       # 亮红色（错误用）
+      BLUE=$(tput setaf 14 2>/dev/null || tput setaf 6)     # 亮青色（代替蓝色）
+      CYAN=$(tput setaf 14 2>/dev/null || tput setaf 6)     # 青色
+      WHITE=$(tput setaf 15 2>/dev/null || tput setaf 7)    # 亮白色
+      ORANGE=$(tput setaf 214 2>/dev/null || tput setaf 3)  # 橙色
+      ;;
+    *)
+      # 默认主题
+      GREEN=$(tput setaf 2 2>/dev/null || echo '')
+      YELLOW=$(tput setaf 3 2>/dev/null || echo '')
+      RED=$(tput setaf 1 2>/dev/null || echo '')
+      BLUE=$(tput setaf 4 2>/dev/null || echo '')
+      CYAN=$(tput setaf 6 2>/dev/null || echo '')
+      WHITE=$(tput setaf 7 2>/dev/null || echo '')
+      ORANGE=$(tput setaf 3 2>/dev/null || echo '')
+      ;;
+  esac
 else
-  BOLD='' RESET='' GREEN='' YELLOW='' RED='' BLUE=''
+  BOLD='' RESET='' GREEN='' YELLOW='' RED='' BLUE='' CYAN='' WHITE='' ORANGE=''
 fi
 
 # ---------- TUI 工具检测 ----------
@@ -109,6 +133,11 @@ while [[ $# -gt 0 ]]; do
 
 UI 选择（可选）：
   DRILL_UI=auto|dialog|gum|none ./review-new.sh
+
+主题选择（可选）：
+  DRILL_THEME=default|ubuntu ./review-new.sh
+  - default: 标准配色（适合深色背景）
+  - ubuntu:  高对比度配色（适配 Ubuntu 红色背景主题）
 
 提示：
 - gum input 本身不支持 bash/readline Tab 补全；
@@ -424,7 +453,11 @@ exercise_loop() {
 
   # 显示题目框（带彩色边框）
   if [[ $USE_GUM -eq 1 ]]; then
-    gum style --border rounded --padding "1 2" --border-foreground 33 \
+    # gum 模式下的颜色代码（根据主题调整）
+    local title_color=33  # 默认青色
+    [[ "$DRILL_THEME" == "ubuntu" ]] && title_color=14  # Ubuntu 主题用亮青色
+
+    gum style --border rounded --padding "1 2" --border-foreground $title_color \
       "🧩 $title
 
 🎯 目标: $goal
@@ -432,14 +465,17 @@ exercise_loop() {
   else
     # 使用 box 字符绘制边框
     local box_width=60
-    local top_border="${BLUE}╔$(printf '═%.0s' $(seq 1 $box_width))╗${RESET}"
-    local bottom_border="${BLUE}╚$(printf '═%.0s' $(seq 1 $box_width))╝${RESET}"
+    local box_color="$BLUE"
+    [[ "$DRILL_THEME" == "ubuntu" ]] && box_color="$CYAN"  # Ubuntu 主题用青色
+
+    local top_border="${box_color}╔$(printf '═%.0s' $(seq 1 $box_width))╗${RESET}"
+    local bottom_border="${box_color}╚$(printf '═%.0s' $(seq 1 $box_width))╝${RESET}"
 
     say "$top_border"
-    say "${BLUE}║${RESET} ${BOLD}🧩 $title${RESET}"
-    say "${BLUE}║${RESET}"
-    say "${BLUE}║${RESET} ${BOLD}🎯 目标:${RESET} $goal"
-    say "${BLUE}║${RESET} ${BOLD}📁 目录:${RESET} $WORKDIR/$subdir"
+    say "${box_color}║${RESET} ${BOLD}🧩 $title${RESET}"
+    say "${box_color}║${RESET}"
+    say "${box_color}║${RESET} ${BOLD}🎯 目标:${RESET} $goal"
+    say "${box_color}║${RESET} ${BOLD}📁 目录:${RESET} $WORKDIR/$subdir"
     say "$bottom_border"
   fi
   say ""
