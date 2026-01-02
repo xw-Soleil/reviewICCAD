@@ -421,15 +421,34 @@ exercise_loop() {
   CURRENT_SUBDIR="$subdir"
 
   hr
-  say "${BOLD}${BLUE}🧩 $title${RESET}"
-  say "${BOLD}🎯 目标:${RESET} $goal"
-  say "${BOLD}📁 目录:${RESET} $WORKDIR/$subdir"
+
+  # 显示题目框（带彩色边框）
+  if [[ $USE_GUM -eq 1 ]]; then
+    gum style --border rounded --padding "1 2" --border-foreground 33 \
+      "🧩 $title
+
+🎯 目标: $goal
+📁 目录: $WORKDIR/$subdir"
+  else
+    # 使用 box 字符绘制边框
+    local box_width=60
+    local top_border="${BLUE}╔$(printf '═%.0s' $(seq 1 $box_width))╗${RESET}"
+    local bottom_border="${BLUE}╚$(printf '═%.0s' $(seq 1 $box_width))╝${RESET}"
+
+    say "$top_border"
+    say "${BLUE}║${RESET} ${BOLD}🧩 $title${RESET}"
+    say "${BLUE}║${RESET}"
+    say "${BLUE}║${RESET} ${BOLD}🎯 目标:${RESET} $goal"
+    say "${BLUE}║${RESET} ${BOLD}📁 目录:${RESET} $WORKDIR/$subdir"
+    say "$bottom_border"
+  fi
+  say ""
 
   if [[ $USE_DIALOG -eq 1 ]]; then
     say "${YELLOW}提示: 输入命令，或选择 h=提示 s=答案 sh=shell q=退出${RESET}"
   elif [[ $USE_GUM -eq 1 ]]; then
     say "${YELLOW}提示: h=提示 s=答案 sh=shell(完整补全) q=退出${RESET}"
-    say "${BLUE}💡 本模式输入用 read -e，所以 Tab 可补全“当前题目目录”下的路径${RESET}"
+    say "${BLUE}💡 本模式输入用 read -e，所以 Tab 可补全"当前题目目录"下的路径${RESET}"
   else
     say "${YELLOW}提示: h=提示 s=答案 sh=shell q=退出${RESET}"
     say "${BLUE}💡 可用 Tab 补全文件名，↑↓ 浏览历史${RESET}"
