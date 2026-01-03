@@ -327,15 +327,16 @@ same_content() {
 exact_content() {
   local file="$WORKDIR/$1"
   local expected="$2"
-  printf "%s" "$expected" | diff -q "$file" - >/dev/null 2>&1
+  printf "%b" "$expected" | diff -q "$file" - >/dev/null 2>&1
 }
 
 not_exists() { ! path_exists "$1"; }
 
 no_tabs() {
   local file="$WORKDIR/$1"
-  ! grep -q $'\t' "$file"
+  [[ -f "$file" ]] && ! grep -q $'\t' "$file"
 }
+
 
 gzip_valid() {
   local gz_file="$WORKDIR/$1"
